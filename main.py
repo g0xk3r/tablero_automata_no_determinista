@@ -19,7 +19,10 @@ def menu():
         print("Opcion no valida, intente de nuevo.")
         return menu()
 
-long_cadena = int(input("Tamaño de la cadena: "))
+def tam_cadena(eleccion):
+    if eleccion == 1:
+        lista_cadenas = [''.join(random.choices('rb', k=long_cadena)) for _ in range(3)]
+        return lista_cadenas.lower()
 
 def pedir_cadena(long_cadena):
     string = input(f"Ingrese la cadena con longitud {long_cadena}: ")
@@ -30,4 +33,9 @@ def pedir_cadena(long_cadena):
         return pedir_cadena(long_cadena)
 
 if __name__ == "__main__":
-    menu()
+    option = menu()
+    if option == 1:
+        cadenas = tam_cadena(option)
+    elif option == 2:
+        cadenas = tam_cadena(option)
+        long_cadena = int(input("Tamaño de la cadena: "))
