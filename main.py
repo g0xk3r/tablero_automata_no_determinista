@@ -1,5 +1,5 @@
 import random
-
+import os
 class Tablero:
     def __init__(self, filas, columnas):
         self.filas = filas
@@ -33,10 +33,21 @@ class Tablero:
         return transiciones_posibles
 
 class Jugador:
-    def __init__(self, numero, cadena):
-        self.numero = numero
-        self.cadena = cadena
-    
+    def __init__(self, id_jugador, estado_inicial, estado_final):
+        self.id = id_jugador
+        self.estado_inicial = estado_inicial
+        self.estado_final = estado_final
+        self.rutas_ganadoras = []
+        self.rutas_perdedoras = []
+
+    def creacion_rutas(self, num_movimientos, tablero):
+        self.rutas_ganadoras.clear()
+        self.rutas_perdedoras.clear()
+        punto_partida = [self.estado_inicial]
+        self.buscar_rutas(punto_partida, num_movimientos, tablero)
+        self.archivar_rutas_ganadoras('ganadoras')
+        self.archivar_rutas_perdedoras('perdedoras')
+        print(f"Archivos generados de jugador {self.id}")
 
 class Juego:
     def __init__(self, tablero, jugador):
