@@ -19,23 +19,36 @@ def menu():
         print("Opcion no valida, intente de nuevo.")
         return menu()
 
-def tam_cadena(eleccion):
+def pedir_tam_cadena(eleccion):
     if eleccion == 1:
-        lista_cadenas = [''.join(random.choices('rb', k=long_cadena)) for _ in range(3)]
-        return lista_cadenas.lower()
-
-def pedir_cadena(long_cadena):
-    string = input(f"Ingrese la cadena con longitud {long_cadena}: ")
-    if len(string) == long_cadena:
-        return string.lower()
+        random.seed()
+        tam = random.randint(3, 100)
+        print(f"Tamaño de las cadenas: {tam}")
+        return tam
     else:
-        print("La cadena no tiene la longitud correcta.")
-        return pedir_cadena(long_cadena)
+        long_cadena = int(input("Tamaño de las cadenas: "))
+        return long_cadena
+
+def pedir_cadena(long_cadena, eleccion):
+    if eleccion == 1:
+        cadena = ''.join(random.choice('rb') for _ in range(long_cadena))
+        print(f"Ingrese la cadena con longitud {long_cadena}: {cadena}")
+        print("Cadena generada exitosamente.")
+        return cadena
+    else:
+        string = input(f"Ingrese la cadena con longitud {long_cadena}: ")
+        if len(string) == long_cadena:
+            print("Cadena generada exitosamente.")
+            return string.lower()
+        else:
+            print("La cadena no tiene la longitud correcta.")
+            return pedir_cadena(long_cadena)
 
 if __name__ == "__main__":
     option = menu()
-    if option == 1:
-        cadenas = tam_cadena(option)
-    elif option == 2:
-        cadenas = tam_cadena(option)
-        long_cadena = int(input("Tamaño de la cadena: "))
+    if option != 0:
+        long_cadena = pedir_tam_cadena(option)
+        cadenas = [pedir_cadena(long_cadena, option) for _ in range(3)]
+        print("Cadenas ingresadas:", cadenas)
+    else:
+        print("Programa terminado.")
