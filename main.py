@@ -115,6 +115,17 @@ class Juego:
                 jugador.ruta_asignada = []
                 print(f"Jugador {jugador.id} no tiene rutas ganadoras disponibles.")
 
+    def mostrar_tablero(self):
+        for fila in range(self.tablero.filas):
+            for columna in range(self.tablero.columnas):
+                casilla = pygame.Rect(
+                    self.margen + (columna * self.tam_casilla),
+                    self.margen + (fila * self.tam_casilla),
+                    self.tam_casilla,
+                    self.tam_casilla
+                )
+                pygame.draw.rect(self.pantalla, self.color_negro, casilla, 2)
+
 def menu():
     print("Menu Principal")
     print("1) Correr de manera automatica")
