@@ -1,5 +1,6 @@
 import random
-import os
+import sys
+import pygame
 class Tablero:
     def __init__(self, filas, columnas):
         self.filas = filas
@@ -83,10 +84,27 @@ class Jugador:
 
 class Juego:
     def __init__(self, tablero, jugadores):
+        pygame.init()
+        # Atributos del juego
         self.tablero = tablero
         self.jugadores = jugadores
         self.ganador = None
         self.casillas_ocupadas = {j.posicion_actual for j in self.jugador}
+
+        # Configuracion grafica
+        self.tam_casilla = 100
+        self.margen = 5
+        ancho = (self.tablero.columnas * self.tam_casilla) + (2 * self.margen)
+        self.pantalla = pygame.display.set_mode((ancho, ancho))
+        pygame.display.set_caption("Tablero de Juego")
+        self.color_blanco = (255, 255, 255)
+        self.color_negro = (0, 0, 0)
+        self.color_gris = (200, 200, 200)
+        self.colores_jugador = {
+            1: (255, 0, 0),
+            2: (0, 255, 0),
+            3: (0, 0, 255)
+        }
 
     def asignar_rutas_aleatorias(self):
         for jugador in self.jugadores:
