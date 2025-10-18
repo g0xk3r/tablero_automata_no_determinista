@@ -48,8 +48,8 @@ class Jugador:
         self.rutas_perdedoras.clear()
         punto_partida = [self.estado_inicial]
         self.buscar_rutas(punto_partida, num_movimientos, tablero)
-        self.archivar_rutas_ganadoras('ganadoras')
-        self.archivar_rutas_perdedoras('perdedoras')
+        self.guardar_rutas_archivo('ganadoras')
+        self.guardar_rutas_archivo('perdedoras')
         print(f"Archivos generados de jugador {self.id}")
 
     def buscar_rutas(self, ruta_actual, num_max_movimientos, tablero):
@@ -89,7 +89,7 @@ class Juego:
         self.tablero = tablero
         self.jugadores = jugadores
         self.ganador = None
-        self.casillas_ocupadas = {j.posicion_actual for j in self.jugador}
+        self.casillas_ocupadas = {j.posicion_actual for j in self.jugadores}
 
         # Configuracion grafica
         self.tam_casilla = 100
@@ -172,9 +172,9 @@ class Juego:
                     if jugador_actual.posicion_actual == jugador_actual.estado_final:
                         self.ganador = jugador_actual
                         print(f"¡El jugador {jugador_actual.id} ha ganado la partida!")
-                turno_jugador += 1
+                indice_turno_jugador += 1
                 if indice_turno_jugador >= len(self.jugadores):
-                    turno_jugador = 0
+                    indice_turno_jugador = 0
                     turno_mov += 1
                     print(f"Fin de ronda {turno_mov}.")
 
