@@ -126,6 +126,71 @@ class Juego:
                 )
                 pygame.draw.rect(self.pantalla, self.color_negro, casilla, 2)
 
+    def mostrar_piezas(self):
+        for jugador in self.jugadores:
+            fila, columna = self.tablero.casilla_a_coordenadas(jugador.posicion_actual)
+            xcentro = self.margen + columna * self.tam_casilla + self.tam_casilla // 2
+            ycentro = self.margen + fila * self.tam_casilla + self.tam_casilla // 2
+            pygame.draw.circle(
+                self.pantalla,
+                self.colores_jugador[jugador.id],
+                (xcentro, ycentro),
+                self.tam_casilla // 3 # radio de circulo
+            )
+
+    def iniciar_partida(self):
+        random.shuffle(self.jugadores)
+        print("El orden de las jugadas será:")
+        for i, jugador in enumerate(self.jugadores):
+            print(f"{i+1} - jugador {jugador.id}")
+        turno_mov = 0
+        indice_turno_jugador = 0
+        if self.jugadores[0].ruta_asignada:
+            num_movimientos_total = len(self.jugadores[0].ruta_asignada) - 1
+        else:
+            num_movimientos_total = 0
+        corriendo = True
+
+        while corriendo:
+            # Hasta aqui revisar
+            for evento in pygame.event.get():
+                if evento.type == pygame.QUIT:
+                    corriendo = False
+
+            if turno_mov < num_movimientos_total and not self.ganador:
+                jugador_actual = self.jugadores[indice_turno_jugador]
+                sig_casilla_objetivo = jugador_actual.ruta_asignada[turno_mov + 1]
+                print(f"Jugador {jugador_actual.id} se mueve a la casilla {sig_casilla_objetivo}")
+
+                if sig_casilla_objetivo in self.casillas_ocupadas:
+                    print(f"Casilla {sig_casilla_objetivo} ocupada. Jugador {jugador_actual.id} pierde su turno.") # modificar para calcular el resto del nuevo vector
+                else:
+                    self.casillas_ocupadas.remove(jugador_actual.posicion_actual)
+                    jugador_actual.posicion_actual = sig_casilla_objetivo
+                    self.casillas_ocupadas.add(jugador_actual.posicion_actual)
+
+                    if jugador_actual.posicion_actual == jugador_actual.estado_final:
+                        self.ganador = jugador_actual
+                        print(f"¡El jugador {jugador_actual.id} ha ganado la partida!")
+                turno_jugador += 1
+                if indice_turno_jugador >= len(self.jugadores):
+                    turno_jugador = 0
+                    turno_mov += 1
+                    print(f"Fin de ronda {turno_mov}.")
+
+                pygame.time.wait(1000)
+            self.pantalla.fill(self.color_blanco)
+            self.mostrar_tablero()
+            self.mostrar_piezas()
+            pygame.display.flip()
+        print("Fin del juego.")
+        if self.ganador:
+            print(f"El ganador es el jugador {self.ganador.id}")
+        else:
+            print("No hay ganador.")
+        pygame.quit()
+        sys.exit()
+
 def menu():
     print("Menu Principal")
     print("1) Correr de manera automatica")
@@ -159,12 +224,12 @@ def pedir_cadena(long_cadena, eleccion):
     if eleccion == 1:
         cadena = ''.join(random.choice('rb') for _ in range(long_cadena))
         print(f"Ingrese la cadena con longitud {long_cadena}: {cadena}")
-        print("Cadena generada exitosamente.")
+        print("Cadena generada.")
         return cadena
     else:
         string = input(f"Ingrese la cadena con longitud {long_cadena}: ")
         if len(string) == long_cadena:
-            print("Cadena generada exitosamente.")
+            print("Cadena generada.")
             return string.lower()
         else:
             print("La cadena no tiene la longitud correcta.")
@@ -176,5 +241,18 @@ if __name__ == "__main__":
         long_cadena = pedir_tam_cadena(option)
         cadenas = [pedir_cadena(long_cadena, option) for _ in range(3)]
         print("Cadenas ingresadas:", cadenas)
+        tablero = Tablero(4, 4)
+        jugadores = [
+            Jugador(1, 1, 16),
+            Jugador(2, 4, 13),
+            Jugador(3, 3, 14)
+        ]
+        num_movimientos = long_cadena
+        for jugador in jugadores:
+            jugador.creacion_rutas(num_movimientos, tablero)
+
+        juego_visual = Juego(tablero, jugadores)
+        juego_visual.asignar_rutas_aleatorias()
+        juego_visual.iniciar_partida()
     else:
         print("Programa terminado.")
