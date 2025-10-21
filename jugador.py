@@ -32,7 +32,7 @@ class Jugador:
             nueva_ruta.append(siguiente_estado)
             self.buscar_rutas(ruta_actual + [siguiente_estado], num_max_movimientos, tablero)
 
-    def guardar_rutas_archivo(self, tipo_ruta):
+    def guardar_rutas_archivo(self, tipo_ruta): # Aqui verificar como guardar
         if tipo_ruta == 'ganadoras':
             listas_rutas = self.rutas_ganadoras
             nombre_archivo = f'jugador_{self.id}_rutas_ganadoras.txt'
