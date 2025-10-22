@@ -1,3 +1,4 @@
+from pathlib import Path
 class Jugador:
     def __init__(self, id_jugador, estado_inicial, estado_final):
         self.id = id_jugador
@@ -33,14 +34,17 @@ class Jugador:
             self.buscar_rutas(ruta_actual + [siguiente_estado], num_max_movimientos, tablero)
 
     def guardar_rutas_archivo(self, tipo_ruta): # Aqui verificar como guardar
+        carpeta = Path("archivos_rutas")
+        carpeta.mkdir(exist_ok=True)
         if tipo_ruta == 'ganadoras':
             listas_rutas = self.rutas_ganadoras
             nombre_archivo = f'jugador_{self.id}_rutas_ganadoras.txt'
         else:
             listas_rutas = self.rutas_perdedoras
             nombre_archivo = f'jugador_{self.id}_rutas_perdedoras.txt'
+        ruta_completa = carpeta / nombre_archivo
 
-        with open(nombre_archivo, 'w') as archivo:
+        with open(ruta_completa, 'w', encoding='utf-8') as archivo:
             if not listas_rutas:
                 archivo.write("No hay rutas disponibles.\n")
                 return
