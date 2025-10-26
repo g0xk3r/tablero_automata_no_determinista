@@ -29,3 +29,10 @@ class Tablero:
                     transiciones_posibles[casilla].add(nueva_casilla)
 
         return transiciones_posibles
+
+    def color_casilla(self, casilla):
+        fila, columna = self.casilla_a_coordenadas(casilla)
+        if (fila + columna) % 2 == 0:
+            return 'b'
+        else:
+            return 'r'

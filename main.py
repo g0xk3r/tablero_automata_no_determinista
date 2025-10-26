@@ -26,10 +26,10 @@ def pedir_tam_cadena(eleccion):
     if eleccion == 1:
         random.seed()
         tam = random.randint(3, 100)
-        print(f"Tamaño de las cadenas: {tam}")
+        print(f"Tamaño de las cadenas (3 - 100): {tam}")
         return tam
     else:
-        long_cadena = int(input("Tamaño de las cadenas: "))
+        long_cadena = int(input("Tamaño de las cadenas (3 - 100): "))
         return long_cadena
 
 def pedir_cadena(long_cadena, eleccion):
@@ -47,12 +47,28 @@ def pedir_cadena(long_cadena, eleccion):
             print("La cadena no tiene la longitud correcta.")
             return pedir_cadena(long_cadena)
 
+def reconfiguracion_cadena(cadena_original):
+    cadena_sin_ultimo = cadena_original[:-1]
+    ultimo_caracter = cadena_original[-1]
+    if ultimo_caracter == 'r':
+        cadena_j2 = cadena_original
+        cadena_j_1_3 = cadena_sin_ultimo + 'b'
+    else:
+        cadena_j2 = cadena_sin_ultimo + 'r'
+        cadena_j_1_3 = cadena_original
+    return {
+        1: cadena_j_1_3,
+        2: cadena_j2,
+        3: cadena_j_1_3
+    }
+
 if __name__ == "__main__":
     option = menu()
     if option != 0:
         long_cadena = pedir_tam_cadena(option)
-        cadenas = [pedir_cadena(long_cadena, option) for _ in range(3)]
-        print("Cadenas ingresadas:", cadenas)
+        cadena_original = pedir_cadena(long_cadena, option)
+        print("Cadena ingresada:", cadena_original)
+        nuevas_cadenas = reconfiguracion_cadena(cadena_original)
         tablero = Tablero(4, 4)
         jugadores = [
             Jugador(1, 1, 16),
@@ -61,7 +77,8 @@ if __name__ == "__main__":
         ]
         num_movimientos = long_cadena
         for jugador in jugadores:
-            jugador.creacion_rutas(num_movimientos, tablero)
+            cadena_correspondiente = nuevas_cadenas[jugador.id]
+            jugador.creacion_rutas(num_movimientos, tablero, cadena_correspondiente)
 
         juego_visual = Juego(tablero, jugadores)
         juego_visual.asignar_rutas_aleatorias()

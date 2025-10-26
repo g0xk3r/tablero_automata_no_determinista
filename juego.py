@@ -1,6 +1,7 @@
 import random
 import sys
 import pygame
+from pathlib import Path
 
 class Juego:
     def __init__(self, tablero, jugadores):
@@ -17,9 +18,10 @@ class Juego:
         ancho = (self.tablero.columnas * self.tam_casilla) + (2 * self.margen)
         self.pantalla = pygame.display.set_mode((ancho, ancho))
         pygame.display.set_caption("Tablero de Juego")
+        self.texto_fuente = pygame.font.SysFont(None, 50)
         self.color_blanco = (255, 255, 255)
-        self.color_negro = (0, 0, 0)
-        self.color_gris = (200, 200, 200)
+        self.color_casilla_negro = (0, 0, 0)
+        self.color_casilla_rojo = (255, 0, 0)
         self.colores_jugador = {
             1: (255, 0, 0),
             2: (0, 255, 0),
@@ -28,35 +30,68 @@ class Juego:
 
     def asignar_rutas_aleatorias(self):
         for jugador in self.jugadores:
-            if jugador.rutas_ganadoras:
-                jugador.ruta_asignada = random.choice(jugador.rutas_ganadoras)
-                print(f"Jugador {jugador.id} ha sido asignado la ruta ganadora: {jugador.ruta_asignada}")
+            num_rutas = jugador.conteo_ganadas
+            ruta_random = None
+            if num_rutas > 0:
+                indice_linea_rand = random.randint(0, num_rutas - 1)
+                indice_linea_actual = 0
+                carpeta = jugador.carpeta
+                ruta_archivo_buscado = carpeta / f"jugador_{jugador.id}_rutas_ganadoras.txt"
+                with open(ruta_archivo_buscado, 'r', encoding="utf-8") as archivo:
+                    for linea in archivo:
+                        if indice_linea_actual == indice_linea_rand:
+                            linea_sin_espacios = linea.strip()
+                            ruta_random = [int(estado.strip()) for estado in linea_sin_espacios.split(',')]
+                            break
+                        indice_linea_actual += 1
+            if ruta_random:
+                jugador.ruta_asignada = ruta_random
+                print(f"Ruta asignada al jugador {jugador.id}: {jugador.ruta_asignada}")
             else:
                 jugador.ruta_asignada = []
-                print(f"Jugador {jugador.id} no tiene rutas ganadoras disponibles.")
+                print(f"No se asigno ruta al jugador {jugador.id} porque no tiene rutas ganadoras.")
 
     def mostrar_tablero(self):
         for fila in range(self.tablero.filas):
             for columna in range(self.tablero.columnas):
+                num_casilla = self.tablero.coordenada_a_casilla(fila, columna)
+                color_casilla = self.tablero.color_casilla(num_casilla)
+                if color_casilla == 'b':
+                    pintar_color = self.color_casilla_negro
+                else:
+                    pintar_color = self.color_casilla_rojo
                 casilla = pygame.Rect(
                     self.margen + (columna * self.tam_casilla),
                     self.margen + (fila * self.tam_casilla),
                     self.tam_casilla,
                     self.tam_casilla
                 )
-                pygame.draw.rect(self.pantalla, self.color_negro, casilla, 2)
+                pygame.draw.rect(self.pantalla, pintar_color, casilla)
 
     def mostrar_piezas(self):
         for jugador in self.jugadores:
             fila, columna = self.tablero.casilla_a_coordenadas(jugador.posicion_actual)
             xcentro = self.margen + columna * self.tam_casilla + self.tam_casilla // 2
             ycentro = self.margen + fila * self.tam_casilla + self.tam_casilla // 2
+            radio = self.tam_casilla // 3
             pygame.draw.circle(
                 self.pantalla,
                 self.colores_jugador[jugador.id],
                 (xcentro, ycentro),
-                self.tam_casilla // 3 # radio de circulo
+                radio
             )
+            pygame.draw.circle(
+                self.pantalla,
+                self.color_blanco,
+                (xcentro, ycentro),
+                radio,
+                3
+            )
+            numero_texto = str(jugador.id)
+            texto_superficie = self.texto_fuente.render(numero_texto, True, self.color_blanco)
+            texto = texto_superficie.get_rect()
+            texto.center = (xcentro, ycentro)
+            self.pantalla.blit(texto_superficie, texto)
 
     def iniciar_partida(self):
         random.shuffle(self.jugadores)
@@ -72,7 +107,6 @@ class Juego:
         corriendo = True
 
         while corriendo:
-            # Hasta aqui revisar
             for evento in pygame.event.get():
                 if evento.type == pygame.QUIT:
                     corriendo = False

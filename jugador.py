@@ -6,47 +6,54 @@ class Jugador:
         self.estado_final = estado_final
         self.posicion_actual = estado_inicial
         self.ruta_asignada = []
-        self.rutas_ganadoras = []
-        self.rutas_perdedoras = []
+        self.conteo_ganadas = 0
+        self.conteo_perdedoras = 0
+        self.carpeta = Path("archivos_rutas")
 
-    def creacion_rutas(self, num_movimientos, tablero):
-        self.rutas_ganadoras.clear()
-        self.rutas_perdedoras.clear()
+    def creacion_rutas(self, num_movimientos, tablero, cadena):
+        self.conteo_ganadas = 0
+        self.conteo_perdedoras = 0
+        self.carpeta.mkdir(exist_ok=True)
+        rutas_ganadoras = self.carpeta / f'jugador_{self.id}_rutas_ganadoras.txt'
+        rutas_perdedoras = self.carpeta / f'jugador_{self.id}_rutas_perdedoras.txt'
         punto_partida = [self.estado_inicial]
-        self.buscar_rutas(punto_partida, num_movimientos, tablero)
-        self.guardar_rutas_archivo('ganadoras')
-        self.guardar_rutas_archivo('perdedoras')
-        print(f"Archivos generados de jugador {self.id}")
 
-    def buscar_rutas(self, ruta_actual, num_max_movimientos, tablero):
+        with open(rutas_ganadoras, 'w', encoding='utf-8') as archivo_ganadoras, open(rutas_perdedoras, 'w', encoding='utf-8') as archivo_perdedoras:
+            self.buscar_rutas(punto_partida, num_movimientos, tablero, archivo_ganadoras, archivo_perdedoras, cadena)
+
+        if self.conteo_ganadas == 0:
+            self.no_rutas(rutas_ganadoras)
+        if self.conteo_perdedoras == 0:
+            self.no_rutas(rutas_perdedoras)
+
+    def buscar_rutas(self, ruta_actual, num_max_movimientos, tablero, archivo_ganadoras, archivo_perdedoras, cadena):
         if len(ruta_actual) - 1 == num_max_movimientos:
             estado_final_ruta = ruta_actual[-1]
+            escribir_ruta = ', '.join(map(str, ruta_actual)) + '\n'
+
             if estado_final_ruta == self.estado_final:
-                self.rutas_ganadoras.append(list(ruta_actual))
+                archivo_ganadoras.write(escribir_ruta)
+                self.conteo_ganadas += 1
             else:
-                self.rutas_perdedoras.append(list(ruta_actual))
+                archivo_perdedoras.write(escribir_ruta)
+                self.conteo_perdedoras += 1
             return
         estado_actual = ruta_actual[-1]
         posibles_siguientes_estados = tablero.transiciones.get(estado_actual, set())
-        for siguiente_estado in posibles_siguientes_estados:
-            nueva_ruta = list(ruta_actual)
-            nueva_ruta.append(siguiente_estado)
-            self.buscar_rutas(ruta_actual + [siguiente_estado], num_max_movimientos, tablero)
+        indice_mov_actual = len(ruta_actual) - 1
+        color_requerido = cadena[indice_mov_actual]
+        for sig_estado in posibles_siguientes_estados:
+            color_respectivo = tablero.color_casilla(sig_estado)
+            if color_respectivo == color_requerido:
+                self.buscar_rutas(
+                    ruta_actual + [sig_estado],
+                    num_max_movimientos,
+                    tablero,
+                    archivo_ganadoras,
+                    archivo_perdedoras,
+                    cadena
+                )
 
-    def guardar_rutas_archivo(self, tipo_ruta): # Aqui verificar como guardar
-        carpeta = Path("archivos_rutas")
-        carpeta.mkdir(exist_ok=True)
-        if tipo_ruta == 'ganadoras':
-            listas_rutas = self.rutas_ganadoras
-            nombre_archivo = f'jugador_{self.id}_rutas_ganadoras.txt'
-        else:
-            listas_rutas = self.rutas_perdedoras
-            nombre_archivo = f'jugador_{self.id}_rutas_perdedoras.txt'
-        ruta_completa = carpeta / nombre_archivo
-
-        with open(ruta_completa, 'w', encoding='utf-8') as archivo:
-            if not listas_rutas:
-                archivo.write("No hay rutas disponibles.\n")
-                return
-            for ruta in listas_rutas:
-                archivo.write(', '.join(map(str, ruta)) + '\n')
+    def no_rutas(self, ruta_archivo):
+        with open(ruta_archivo, 'w', encoding='utf-8') as archivo:
+            archivo.write("No hay rutas disponibles.\n")
