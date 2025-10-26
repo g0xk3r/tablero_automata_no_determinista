@@ -2,6 +2,7 @@ import random
 from tablero import Tablero
 from jugador import Jugador
 from juego import Juego
+from graficador import graficar_rutas_jugador
 
 def menu():
     print("Menu Principal")
@@ -81,6 +82,8 @@ if __name__ == "__main__":
         for jugador in jugadores:
             cadena_correspondiente = nuevas_cadenas[jugador.id]
             jugador.creacion_rutas(num_movimientos, tablero, cadena_correspondiente)
+        for jugador in jugadores:
+            graficar_rutas_jugador(jugador, num_movimientos)
 
         juego_visual = Juego(tablero, jugadores, num_movimientos)
         juego_visual.asignar_rutas_aleatorias()
