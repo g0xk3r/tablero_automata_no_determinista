@@ -6,6 +6,7 @@ class Jugador:
         self.estado_final = estado_final
         self.posicion_actual = estado_inicial
         self.ruta_asignada = []
+        self.movimiento_actual = 0
         self.conteo_ganadas = 0
         self.conteo_perdedoras = 0
         self.carpeta = Path("archivos_rutas")

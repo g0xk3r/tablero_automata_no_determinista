@@ -69,6 +69,8 @@ if __name__ == "__main__":
         cadena_original = pedir_cadena(long_cadena, option)
         print("Cadena ingresada:", cadena_original)
         nuevas_cadenas = reconfiguracion_cadena(cadena_original)
+        for i in range(1, 4):
+            print(f"Cadena para el jugador {i}: {nuevas_cadenas[i]}")
         tablero = Tablero(4, 4)
         jugadores = [
             Jugador(1, 1, 16),
@@ -80,7 +82,7 @@ if __name__ == "__main__":
             cadena_correspondiente = nuevas_cadenas[jugador.id]
             jugador.creacion_rutas(num_movimientos, tablero, cadena_correspondiente)
 
-        juego_visual = Juego(tablero, jugadores)
+        juego_visual = Juego(tablero, jugadores, num_movimientos)
         juego_visual.asignar_rutas_aleatorias()
         juego_visual.iniciar_partida()
     else:

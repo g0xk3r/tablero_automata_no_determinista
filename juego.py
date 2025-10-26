@@ -1,16 +1,16 @@
 import random
 import sys
 import pygame
-from pathlib import Path
 
 class Juego:
-    def __init__(self, tablero, jugadores):
+    def __init__(self, tablero, jugadores, num_movimientos):
         pygame.init()
         # Atributos del juego
         self.tablero = tablero
         self.jugadores = jugadores
         self.ganador = None
         self.casillas_ocupadas = {j.posicion_actual for j in self.jugadores}
+        self.movimientos_totales = num_movimientos
 
         # Configuracion grafica
         self.tam_casilla = 100
@@ -98,49 +98,74 @@ class Juego:
         print("El orden de las jugadas será:")
         for i, jugador in enumerate(self.jugadores):
             print(f"{i+1} - jugador {jugador.id}")
-        turno_mov = 0
+
+        self.pantalla.fill(self.color_blanco)
+        self.mostrar_tablero()
+        self.mostrar_piezas()
+        pygame.display.flip()
+
         indice_turno_jugador = 0
-        if self.jugadores[0].ruta_asignada:
-            num_movimientos_total = len(self.jugadores[0].ruta_asignada) - 1
-        else:
-            num_movimientos_total = 0
         corriendo = True
+        ronda = 1
+        tiempo_inicio = pygame.time.get_ticks()
+        esperando = True
+
+        while esperando: # Espera 2 segundos antes de iniciar
+            if pygame.time.get_ticks() - tiempo_inicio > 2000:
+                esperando = False
+            for evento in pygame.event.get():
+                if evento.type == pygame.QUIT:
+                    esperando = False
+                    corriendo = False
 
         while corriendo:
             for evento in pygame.event.get():
                 if evento.type == pygame.QUIT:
                     corriendo = False
-
-            if turno_mov < num_movimientos_total and not self.ganador:
+            if not self.ganador:
                 jugador_actual = self.jugadores[indice_turno_jugador]
-                sig_casilla_objetivo = jugador_actual.ruta_asignada[turno_mov + 1]
-                print(f"Jugador {jugador_actual.id} se mueve a la casilla {sig_casilla_objetivo}")
-
-                if sig_casilla_objetivo in self.casillas_ocupadas:
-                    print(f"Casilla {sig_casilla_objetivo} ocupada. Jugador {jugador_actual.id} pierde su turno.") # modificar para calcular el resto del nuevo vector
+                if not jugador_actual.ruta_asignada: # Comprobar ruta vacia
+                    print(f"Jugador {jugador_actual.id} no tiene ruta. Pierde turno.")
+                elif jugador_actual.movimiento_actual >= self.movimientos_totales:
+                    pass # Si ya termino salta turno
                 else:
-                    self.casillas_ocupadas.remove(jugador_actual.posicion_actual)
-                    jugador_actual.posicion_actual = sig_casilla_objetivo
-                    self.casillas_ocupadas.add(jugador_actual.posicion_actual)
+                    indice_sig_casilla = jugador_actual.movimiento_actual + 1
+                    sig_casilla_objetivo = jugador_actual.ruta_asignada[indice_sig_casilla]
+                    print(f"Jugador {jugador_actual.id} (mov {indice_sig_casilla}/{self.movimientos_totales}) intenta ir a {sig_casilla_objetivo}")
+                    if sig_casilla_objetivo in self.casillas_ocupadas:
+                        print(f"Casilla {sig_casilla_objetivo} ocupada. Reconfigurando ruta...")
+                        # No se incrementa su contador, lo intentará de nuevo
+                        # Aqui reconfigurar el vector
+                    else:
+                        print("Hecho")
+                        self.casillas_ocupadas.remove(jugador_actual.posicion_actual)
+                        jugador_actual.posicion_actual = sig_casilla_objetivo
+                        self.casillas_ocupadas.add(jugador_actual.posicion_actual)
+                        jugador_actual.movimiento_actual += 1
 
-                    if jugador_actual.posicion_actual == jugador_actual.estado_final:
-                        self.ganador = jugador_actual
-                        print(f"¡El jugador {jugador_actual.id} ha ganado la partida!")
-                indice_turno_jugador += 1
-                if indice_turno_jugador >= len(self.jugadores):
-                    indice_turno_jugador = 0
-                    turno_mov += 1
-                    print(f"Fin de ronda {turno_mov}.")
+                        if jugador_actual.posicion_actual == jugador_actual.estado_final:
+                            self.ganador = jugador_actual
+                            print(f"Ganador de la partida: Jugador {jugador_actual.id}")
+                if not self.ganador:
+                    todos_terminaron = all(jug.movimiento_actual >= self.movimientos_totales for jug in self.jugadores)
+                    if todos_terminaron:
+                        print("Todos los jugadores terminaron sus movimientos pero hay ganador.")
+                        corriendo = False
+                    if corriendo:
+                        indice_turno_jugador += 1
+                        if indice_turno_jugador >= len(self.jugadores):
+                            indice_turno_jugador = 0
+                            print(f"Fin de ronda {ronda}\n")
+                            ronda += 1
 
+            if corriendo and not self.ganador:
                 pygame.time.wait(1000)
+
             self.pantalla.fill(self.color_blanco)
             self.mostrar_tablero()
             self.mostrar_piezas()
             pygame.display.flip()
-        print("Fin del juego.")
-        if self.ganador:
-            print(f"El ganador es el jugador {self.ganador.id}")
-        else:
-            print("No hay ganador.")
+
+        print("Fin de juego.")
         pygame.quit()
         sys.exit()

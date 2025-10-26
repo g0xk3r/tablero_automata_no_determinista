@@ -24,7 +24,7 @@ class Tablero:
             for fila_mov_list, colum_mov_list in movimientos_lista:
                 nueva_fila, nueva_columna = fila + fila_mov_list, columna + colum_mov_list
 
-                if (0 <= nueva_fila < self.filas) and 0 <= (nueva_columna < self.columnas):
+                if (0 <= nueva_fila < self.filas) and (0 <= nueva_columna < self.columnas):
                     nueva_casilla = self.coordenada_a_casilla(nueva_fila, nueva_columna)
                     transiciones_posibles[casilla].add(nueva_casilla)
 
