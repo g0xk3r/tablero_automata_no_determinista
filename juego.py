@@ -105,7 +105,7 @@ class Juego:
             texto.center = (xcentro, ycentro)
             self.pantalla.blit(texto_superficie, texto)
 
-    def reconfigurar_ruta(self, jugador_actual, casilla_objetivo_fallida, rutas_falladas_turno):
+    def reconfigurar_ruta(self, jugador_actual, rutas_falladas_turno):
         indice_actual = jugador_actual.movimiento_actual
         casilla_actual = jugador_actual.posicion_actual
         ruta_archivo = jugador_actual.carpeta / f"jugador_{jugador_actual.id}_rutas_ganadoras.txt"
@@ -120,9 +120,13 @@ class Juego:
                 ruta_candidata = [int(estado.strip()) for estado in linea_limpia.split(',')]
                 if ruta_candidata in rutas_falladas_turno:
                     continue
-                if (len(ruta_candidata) > indice_objetivo) and (ruta_candidata[indice_actual] == casilla_actual) and (ruta_candidata[indice_objetivo] != casilla_objetivo_fallida): # Mismo punto actual
+                if not (len(ruta_candidata) > indice_objetivo) and (ruta_candidata[indice_actual] == casilla_actual): # Mismo punto actual
                     nueva_ruta_encontrada = ruta_candidata
-                    break # Encontramos la primer alternativa
+                    continue
+                siguiente_paso = ruta_candidata[indice_objetivo]
+                if siguiente_paso not in self.casillas_ocupadas:
+                    nueva_ruta_encontrada = ruta_candidata
+                    break
 
         if nueva_ruta_encontrada:
             jugador_actual.ruta_asignada = nueva_ruta_encontrada
@@ -232,7 +236,7 @@ class Juego:
                             print(f"Casilla {sig_casilla_objetivo} ocupada. Reconfigurando ruta...")
                             # No se incrementa su contador, lo intentará de nuevo
                             rutas_falladas_turno.append(list(jugador_actual.ruta_asignada))
-                            reconfiguracion_exitosa = self.reconfigurar_ruta(jugador_actual, sig_casilla_objetivo, rutas_falladas_turno)
+                            reconfiguracion_exitosa = self.reconfigurar_ruta(jugador_actual, rutas_falladas_turno)
                             if reconfiguracion_exitosa:
                                 print("Intentando de nuevo...")
                                 self.indices_reconfig[jugador_actual.id].append(jugador_actual.movimiento_actual + 1)
