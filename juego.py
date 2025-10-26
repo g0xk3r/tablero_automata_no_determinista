@@ -58,9 +58,11 @@ class Juego:
                         indice_linea_actual += 1
             if ruta_random:
                 jugador.ruta_asignada = ruta_random
+                jugador.ruta_inicial = list(ruta_random)
                 print(f"Ruta asignada al jugador {jugador.id}: {jugador.ruta_asignada}")
             else:
                 jugador.ruta_asignada = []
+                jugador.ruta_inicial = []
                 print(f"No se asigno ruta al jugador {jugador.id} porque no tiene rutas ganadoras.")
 
     def mostrar_tablero(self):
@@ -111,6 +113,7 @@ class Juego:
         ruta_archivo = jugador_actual.carpeta / f"jugador_{jugador_actual.id}_rutas_ganadoras.txt"
         nueva_ruta_encontrada = None
         indice_objetivo = indice_actual + 1
+        casilla_fallida = jugador_actual.ruta_asignada[indice_objetivo]
 
         with open(ruta_archivo, 'r', encoding="utf-8") as archivo:
             for linea in archivo:
@@ -120,16 +123,21 @@ class Juego:
                 ruta_candidata = [int(estado.strip()) for estado in linea_limpia.split(',')]
                 if ruta_candidata in rutas_falladas_turno:
                     continue
-                if not (len(ruta_candidata) > indice_objetivo) and (ruta_candidata[indice_actual] == casilla_actual): # Mismo punto actual
-                    nueva_ruta_encontrada = ruta_candidata
+                if len(ruta_candidata) <= indice_objetivo:
+                    continue
+                if ruta_candidata[indice_actual] != casilla_actual:
                     continue
                 siguiente_paso = ruta_candidata[indice_objetivo]
+                if siguiente_paso == casilla_fallida:
+                    continue
                 if siguiente_paso not in self.casillas_ocupadas:
                     nueva_ruta_encontrada = ruta_candidata
                     break
 
         if nueva_ruta_encontrada:
-            jugador_actual.ruta_asignada = nueva_ruta_encontrada
+            historial = jugador_actual.ruta_asignada[0:indice_actual+1]
+            nuevo_futuro = nueva_ruta_encontrada[indice_objetivo:]
+            jugador_actual.ruta_asignada = historial + nuevo_futuro
             print(f"Ruta reconfigurada: {jugador_actual.ruta_asignada}")
             return True
         else:
@@ -137,21 +145,44 @@ class Juego:
             return False
 
     def mostrar_pantalla_final(self):
-        self.pantalla = pygame.display.set_mode((1200,500))
+        self.pantalla = pygame.display.set_mode((1200,800))
         self.pantalla.fill(self.color_blanco)
-        titulo_surf = self.texto_fuente.render("Recorridos Finales", True, self.color_casilla_negro)
-        titulo_rect = titulo_surf.get_rect(center=(self.pantalla.get_width() // 2, 40))
-        self.pantalla.blit(titulo_surf, titulo_rect)
-        y_pos = 100 # Posición Y inicial
 
+        titulo_surf_ini = self.texto_fuente.render("Recorridos Iniciales", True, self.color_casilla_negro)
+        titulo_rect_ini = titulo_surf_ini.get_rect(center=(self.pantalla.get_width() // 2, 40))
+        self.pantalla.blit(titulo_surf_ini, titulo_rect_ini)
+        y_pos = 100
         for jugador in self.jugadores:
             x_pos = 20 # Resetea X
             texto_jugador = f"Jugador {jugador.id}: ["
             surf_titulo = self.fuente_ruta.render(texto_jugador, True, self.color_casilla_negro)
             self.pantalla.blit(surf_titulo, (x_pos, y_pos))
             x_pos += surf_titulo.get_width()
-            ruta_final = jugador.ruta_asignada
+            ruta_inicial = getattr(jugador, 'ruta_inicial', [])
+            if not ruta_inicial:
+                surf = self.fuente_ruta.render("No se asigno ruta.]", True, self.color_casilla_negro)
+                self.pantalla.blit(surf, (x_pos, y_pos))
+            else:
+                segmento_str = ", ".join(map(str, ruta_inicial))
+                surf = self.fuente_ruta.render(segmento_str, True, self.color_casilla_negro)
+                self.pantalla.blit(surf, (x_pos, y_pos))
+                x_pos += surf.get_width()
+                surf_final = self.fuente_ruta.render("]", True, self.color_casilla_negro)
+                self.pantalla.blit(surf_final, (x_pos, y_pos))
+            y_pos += 40
 
+        y_pos_titulo_final = y_pos + 60
+        titulo_surf_fin = self.texto_fuente.render("Recorridos Finales", True, self.color_casilla_negro)
+        titulo_rect_fin = titulo_surf_fin.get_rect(center=(self.pantalla.get_width() // 2, y_pos_titulo_final))
+        self.pantalla.blit(titulo_surf_fin, titulo_rect_fin)
+        y_pos = y_pos_titulo_final + 60
+        for jugador in self.jugadores:
+            x_pos = 20
+            texto_jugador = f"Jugador {jugador.id}: ["
+            surf_titulo = self.fuente_ruta.render(texto_jugador, True, self.color_casilla_negro)
+            self.pantalla.blit(surf_titulo, (x_pos, y_pos))
+            x_pos += surf_titulo.get_width()
+            ruta_final = jugador.ruta_asignada
             if not ruta_final:
                 surf = self.fuente_ruta.render("No se asigno ruta.]", True, self.color_casilla_negro)
                 self.pantalla.blit(surf, (x_pos, y_pos))
@@ -165,12 +196,10 @@ class Juego:
                 idx_fin = puntos_de_corte[i+1]
                 if idx_inicio >= idx_fin:
                     continue
-
                 segmento_lista = ruta_final[idx_inicio:idx_fin]
                 segmento_str = ", ".join(map(str, segmento_lista))
                 if idx_fin != len(ruta_final):
                     segmento_str += ", "
-
                 color = self.colores_segmentos[color_index % len(self.colores_segmentos)]
                 surf = self.fuente_ruta.render(segmento_str, True, color)
                 self.pantalla.blit(surf, (x_pos, y_pos))
@@ -179,13 +208,14 @@ class Juego:
 
             surf_final = self.fuente_ruta.render("]", True, self.color_casilla_negro)
             self.pantalla.blit(surf_final, (x_pos, y_pos))
-            y_pos += 40 # Siguiente línea
+            y_pos += 40
 
         pygame.display.flip()
         espera_final = True
+        pygame.event.clear()
         while espera_final:
             for evento in pygame.event.get():
-                if evento.type == pygame.QUIT or evento.type == pygame.KEYDOWN:
+                if evento.type == pygame.QUIT:
                     espera_final = False
 
     def iniciar_partida(self):
@@ -232,6 +262,7 @@ class Juego:
                         indice_sig_casilla = jugador_actual.movimiento_actual + 1
                         sig_casilla_objetivo = jugador_actual.ruta_asignada[indice_sig_casilla]
                         print(f"Jugador {jugador_actual.id} (mov {indice_sig_casilla}/{self.movimientos_totales}) intenta ir a {sig_casilla_objetivo}")
+                        print(f"Ruta actual jugador {jugador_actual.id}: {jugador_actual.ruta_asignada}")
                         if sig_casilla_objetivo in self.casillas_ocupadas:
                             print(f"Casilla {sig_casilla_objetivo} ocupada. Reconfigurando ruta...")
                             # No se incrementa su contador, lo intentará de nuevo
